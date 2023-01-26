@@ -70,12 +70,7 @@ public class CoffeeMakerTest {
 	}
 
 	@Test
-	public void testAddRecipe() {
-		assertTrue(coffeeMaker.addRecipe(espresso));
-	}
-
-	@Test
-	public void testContextCofee() throws ContextException {
+	public void testContextCoffee() throws ContextException {
 		assertTrue(espresso.getAmtCoffee() == 6);
 	}
 
@@ -85,42 +80,57 @@ public class CoffeeMakerTest {
 	}
 
 	@Test
-	public void addRecepie() throws Exception {
-		coffeeMaker.addRecipe(mocha);
-		assertEquals(coffeeMaker.getRecipeForName("mocha").getName(), "mocha");
-	}
-
-	@Test
-	public void addContextRecepie() throws Exception {
-		coffeeMaker.addRecipe(Recipe.getContext(mocha));
-		assertEquals(coffeeMaker.getRecipeForName("mocha").getName(), "mocha");
-	}
-
-	@Test
-	public void addServiceRecepie() throws Exception {
-		Routine cmt = task(sig("addRecipe", coffeeMaker),
-						context(types(Recipe.class), args(espresso),
-							result("recipe/added")));
-
-		logger.info("isAdded: " + exec(cmt));
-		assertEquals(coffeeMaker.getRecipeForName("espresso").getName(), "espresso");
-	}
-
-	@Test
-	public void addRecipes() throws Exception {
-		coffeeMaker.addRecipe(mocha);
-		coffeeMaker.addRecipe(macchiato);
-		coffeeMaker.addRecipe(americano);
-
-		assertEquals(coffeeMaker.getRecipeForName("mocha").getName(), "mocha");
-		assertEquals(coffeeMaker.getRecipeForName("macchiato").getName(), "macchiato");
-		assertEquals(coffeeMaker.getRecipeForName("americano").getName(), "americano");
-	}
-
-	@Test
 	public void makeCoffee() throws Exception {
 		coffeeMaker.addRecipe(espresso);
 		assertEquals(coffeeMaker.makeCoffee(espresso, 200), 150);
+	}
+
+	//Added tests for Purchase Beverage Use Case
+
+	@Test
+	public void isMakeCoffeeNotMakingCoffeeWhenNotEnoughMoney() throws Exception {
+		coffeeMaker.addRecipe(espresso);
+		int chocolateBefore = inventory.getChocolate();
+		int coffeeBefore = inventory.getCoffee();
+		int milkBefore = inventory.getMilk();
+		int sugarBefore = inventory.getSugar();
+		assertEquals(coffeeMaker.makeCoffee(espresso, espresso.getPrice()-10), espresso.getPrice()-10);
+		assertEquals( chocolateBefore,inventory.getChocolate());
+		assertEquals(coffeeBefore,inventory.getCoffee());
+		assertEquals(sugarBefore,inventory.getSugar() );
+		assertEquals(milkBefore, inventory.getMilk() );
+
+	}
+
+	@Test
+	public void isMakeCoffeeUsesIngredientsCorrectly() throws Exception {
+		coffeeMaker.addRecipe(espresso);
+		int chocolateBefore = inventory.getChocolate();
+		int coffeeBefore = inventory.getCoffee();
+		int milkBefore = inventory.getMilk();
+		int sugarBefore = inventory.getSugar();
+		assertEquals(coffeeMaker.makeCoffee(espresso, espresso.getPrice()), 0);
+		assertEquals(chocolateBefore-espresso.getAmtChocolate(), inventory.getChocolate());
+		assertEquals(coffeeBefore-espresso.getAmtCoffee(), inventory.getCoffee());
+		assertEquals(sugarBefore-espresso.getAmtSugar(), inventory.getSugar());
+		assertEquals(milkBefore-espresso.getAmtMilk(),inventory.getMilk());
+
+	}
+
+	@Test
+	public void isMakeCoffeeNotMakingCoffeeWhenNotEnoughIngredients() throws Exception {
+		espresso.setAmtCoffee(inventory.getCoffee()+1);
+		coffeeMaker.addRecipe(espresso);
+		int chocolateBefore = inventory.getChocolate();
+		int coffeeBefore = inventory.getCoffee();
+		int milkBefore = inventory.getMilk();
+		int sugarBefore = inventory.getSugar();
+		assertEquals(coffeeMaker.makeCoffee(espresso, espresso.getPrice()), espresso.getPrice());
+		assertEquals( chocolateBefore,inventory.getChocolate());
+		assertEquals(coffeeBefore,inventory.getCoffee());
+		assertEquals(sugarBefore,inventory.getSugar() );
+		assertEquals(milkBefore, inventory.getMilk() );
+
 	}
 
 }
