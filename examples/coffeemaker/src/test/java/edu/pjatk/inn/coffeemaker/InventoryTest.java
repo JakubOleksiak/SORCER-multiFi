@@ -17,9 +17,6 @@ import static org.junit.Assert.*;
 import static sorcer.eo.operator.*;
 import static sorcer.so.operator.exec;
 
-/**
- * @author Mike Sobolewski
- */
 @RunWith(SorcerTestRunner.class)
 @ProjectContext("examples/coffeemaker")
 public class InventoryTest {
