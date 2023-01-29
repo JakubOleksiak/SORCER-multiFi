@@ -53,7 +53,7 @@ public class NewGenCoffeServiceTest {
                 ent("amtCoffee", 4), ent("amtMilk", 0),
                 ent("amtSugar", 1), ent("amtChocolate", 0));
 
-		Context inventory = context(ent("coffeeAmt", 50), ent("milkAmt", 50), ent("sugarAmt", 50), ent("ChocolateAmt", 50));
+		Context inventory = context(ent("coffeeAmt", 50), ent("milkAmt", 50), ent("sugarAmt", 50), ent("chocolateAmt", 50));
 		coffeemaker = context(ent("id", "hall-03"), ent("inventory", inventory));
     }
 
@@ -69,23 +69,25 @@ public class NewGenCoffeServiceTest {
 
     @Test
     public void giveCode() throws Exception {
-        Routine cmt = task(sig("giveCode", IAuthenticationService.class), context(ent("user-id", "s18728")));
-        Context out = context(exert(cmt));
-        assertNotNull(value(out, "code"));
+        Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18728")), result("recipes/s18728/mocha/added"));
+        Routine createOrder = task(sig("createOrder", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18728/mocha"), result("coffeemakers/hall-03/orders/s18728/01"));
+        Routine giveCode = task(sig("giveCode", IAuthenticationService.class), inVal("order", "coffeemakers/hall-03/orders/s18728/01"), outPaths("coffeemakers/hall-03/orders/s18728/01/isCodeGiven", "coffeemakers/hall-03/orders/s18728/01/code"));
+        Block block = block("giveCode",addMocha,createOrder, giveCode);
+        Context out = context(exert(block));
+        assertEquals(value(out, "coffeemakers/hall-03/orders/s18728/01/isCodeGiven"), true);
+        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18728/01/code"));
+
     }
 
     @Test
     public void checkCode() throws Exception {
-        Routine cmt = task(sig("giveCode", IAuthenticationService.class), context(ent("user-id", "s18728")));
-        Context out = context(exert(cmt));
-        assertNotNull(value(out, "code"));
-    }
-
-    @Test
-    public void getRecipes() throws Exception {
-        Routine cmt = task(sig("getRecipes", INextGenCoffemakerService.class));
-        Context out = context(exert(cmt));
-        assertNotNull(value(out, "recipes"));
+        Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18728")), result("recipes/s18728/mocha/added"));
+        Routine createOrder = task(sig("createOrder", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18728/mocha"), result("coffeemakers/hall-03/orders/s18728/01"));
+        Routine giveCode = task(sig("giveCode", IAuthenticationService.class), inVal("order", "coffeemakers/hall-03/orders/s18728/01"), outPaths("coffeemakers/hall-03/orders/s18728/01/isCodeGiven", "coffeemakers/hall-03/orders/s18728/01/code"));
+        Routine checkCode = task(sig("checkCode", IAuthenticationService.class), inVal("order", "coffeemakers/hall-03/orders/s18728/01"), inVal("code", "coffeemakers/hall-03/orders/s18728/01/code"), result("coffeemakers/hall-03/orders/s18728/01/isCodeValid"));
+        Block block = block("checkCode",addMocha,createOrder, giveCode, checkCode);
+        Context out = context(exert(block));
+        assertEquals(value(out, "coffeemakers/hall-03/orders/s18728/01/isCodeValid"), true);
     }
 
     @Test
@@ -118,7 +120,7 @@ public class NewGenCoffeServiceTest {
         Routine makeCoffee = task(sig("makeCoffee", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18725/mocha"), coffeemaker);
         Block block = block("makeCoffee",addMocha,makeCoffee);
         Context out = context(exert(block));
-        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18728/01/isMade"));
+        assertEquals(value(out, "coffeemakers/hall-03/orders/s18728/01/isMade"), true);
     }
 
     @Test
@@ -128,23 +130,27 @@ public class NewGenCoffeServiceTest {
         Routine storeCoffee = task(sig("storeCoffee", INextGenCoffemakerService.class), inVal("order", "coffeemakers/hall-03/orders/s18725/01"));
         Block block = block("storeCoffee",addMocha,makeCoffee,storeCoffee);
         Context out = context(exert(block));
-        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18725/01/isStored"));
+        assertEquals(value(out, "coffeemakers/hall-03/orders/s18725/01/isStored"), true);
     }
 
     @Test
     public void giveCoffee() throws Exception {
         Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18725")), result("recipes/s18725/mocha/added"));
-        Routine giveCoffee = task(sig("giveCoffee", INextGenCoffemakerService.class), context(ent("code", "18725")));
-        Block block = block("giveCoffee",addMocha,giveCoffee);
+        Routine makeCoffee = task(sig("makeCoffee", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18725/mocha"), coffeemaker, result("coffeemakers/hall-03/orders/s18725/01/isMade"));
+        Routine giveCoffee = task(sig("giveCoffee", INextGenCoffemakerService.class), inVal("order", "coffeemakers/hall-03/orders/s18728/01"), result("coffeemakers/hall-03/orders/s18728/01/isGiven"));
+        Block block = block("giveCoffee",addMocha,makeCoffee,giveCoffee);
         Context out = context(exert(block));
-        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18725/01/isGiven"));
+        assertEquals(value(out, "coffeemakers/hall-03/orders/s18725/01/isGiven"), true);
     }
 
     @Test
     public void confirmPayment() throws Exception {
-        Routine cmt = task(sig("confirmPayment", IPaymentService.class), context(ent("user-id", "s18725")));
-        Context out = context(exert(cmt));
-        assertNotNull(value(out, "payment"));
+        Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18725")), result("recipes/s18725/mocha/added"));
+        Routine createOrder = task(sig("createOrder", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18725/mocha"), result("coffeemakers/hall-03/orders/s18725/01"));
+        Routine confirmPayment = task(sig("confirmPayment", IPaymentService.class), inVal("order", "coffeemakers/hall-03/orders/s18725/01"), result("coffeemakers/hall-03/orders/s18725/01/isPayedFor"));
+        Block block = block("confirmPayment",addMocha,createOrder,confirmPayment);
+        Context out = context(exert(block));
+        assertEquals(value(out, "coffeemakers/hall-03/orders/s18725/01/isPayedFor"), true);
     }
 
     @Test
@@ -154,7 +160,7 @@ public class NewGenCoffeServiceTest {
         Routine checkInventory = task(sig("checkInventory", IInventoryService.class), inVal("order", "coffeemakers/hall-03/orders/s18725/01"), result("coffeemakers/hall-03/orders/s18725/01/isEnough"));
         Block block = block("giveCoffee",addMocha,createOrder,checkInventory);
         Context out = context(exert(block));
-        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18725/01/isEnough"));
+        assertEquals(value(out, "coffeemakers/hall-03/orders/s18725/01/isEnough"), true);
     }
 
 	@Test
@@ -173,7 +179,7 @@ public class NewGenCoffeServiceTest {
         Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18728")), result("recipes/s18728/mocha/added"));
         Routine createOrder = task(sig("createOrder", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18728/mocha"), result("coffeemakers/hall-03/orders/s18728/01"));
         Routine checkInventory = task(sig("checkInventory", IInventoryService.class), inVal("order", "coffeemakers/hall-03/orders/s18728/01"), result("coffeemakers/hall-03/orders/s18728/01/isEnough"));
-        Routine checkPayment = task(sig("checkPayment", IPaymentService.class), inVal("order", "coffeemakers/hall-03/orders/s18728/01"), result("coffeemakers/hall-03/orders/s18728/01/isPayedFor"));
+        Routine confirmPayment = task(sig("confirmPayment", IPaymentService.class), inVal("order", "coffeemakers/hall-03/orders/s18728/01"), result("coffeemakers/hall-03/orders/s18728/01/isPayedFor"));
         Routine makeCoffee = task(sig("makeCoffee", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18728/mocha"), coffeemaker, result("coffeemakers/hall-03/orders/s18728/01/isMade"));
         Routine storeCoffee = task(sig("storeCoffee", INextGenCoffemakerService.class), inVal("order", "coffeemakers/hall-03/orders/s18728/01"), result("coffeemakers/hall-03/orders/s18728/01/isStored"));
         Routine giveCode = task(sig("giveCode", IAuthenticationService.class), inVal("order", "coffeemakers/hall-03/orders/s18728/01"), outPaths("coffeemakers/hall-03/orders/s18728/01/isCodeGiven", "coffeemakers/hall-03/orders/s18728/01/code"));
@@ -189,7 +195,7 @@ public class NewGenCoffeServiceTest {
                         opt(condition((Context<Boolean> cxt)
                                 -> !value(cxt, "coffeemakers/hall-03/orders/s18728/01/isCodeValid")), terminateOrder)));
 
-        Block paymentCheckMakeCoffee = block("inventoryCheckBlock", checkPayment,
+        Block paymentCheckMakeCoffee = block("inventoryCheckBlock", confirmPayment,
                 alt(opt(condition((Context<Boolean> cxt) ->
                                 value(cxt, "coffeemakers/hall-03/orders/s18728/01/isPayedFor")), makeCoffee),
                         opt(condition((Context<Boolean> cxt)
@@ -205,6 +211,11 @@ public class NewGenCoffeServiceTest {
         Block orderCoffee = block("orderCoffee", addMocha, createOrder, inventoryPaymentCheckAndMakeCoffee, storeCoffee, giveCode, codeCheckGiveCoffee, context(ent("drinkerBalance", 150)));
 		Context result = context(exert(orderCoffee));
 		assertEquals(value(result, "drinkerBalance"), 50.00);
+        assertEquals(value(coffeemaker.getChild("inventory").getContext("coffeeAmt")), 42);
+        assertEquals(value(coffeemaker.getChild("inventory").getContext("milkAmt")), 49);
+        assertEquals(value(coffeemaker.getChild("inventory").getContext("sugarAmt")), 49);
+        assertEquals(value(coffeemaker.getChild("inventory").getContext("chocolateAmt")), 48);
+
     }
 }
 
