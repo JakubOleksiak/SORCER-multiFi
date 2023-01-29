@@ -105,30 +105,39 @@ public class NewGenCoffeServiceTest {
 
     @Test
     public void createOrder() throws Exception {
-        Routine cmt = task(sig("createOrder", INextGenCoffemakerService.class), context(ent("user-id", "s18725")));
-        Context out = context(exert(cmt));
-        assertNotNull(value(out, "order"));
+        Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18725")), result("recipes/s18725/mocha/added"));
+        Routine createOrder = task(sig("createOrder", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18725/mocha"), result("coffeemakers/hall-03/orders/s18725/01"));
+        Block block = block("createOrder",addMocha,createOrder);
+        Context out = context(exert(block));
+        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18725/01"));
     }
 
     @Test
     public void makeCoffee() throws Exception {
-        Routine cmt = task(sig("makeCoffee", CoffeeService.class), context(ent("recipe", "recipes/s18728/mocha")));
-        Context out = context(exert(cmt));
-        assertNotNull(value(out, "coffee"));
+        Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18725")), result("recipes/s18728/mocha/added"));
+        Routine makeCoffee = task(sig("makeCoffee", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18725/mocha"), coffeemaker);
+        Block block = block("makeCoffee",addMocha,makeCoffee);
+        Context out = context(exert(block));
+        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18728/01/isMade"));
     }
 
     @Test
     public void storeCoffee() throws Exception {
-        Routine cmt = task(sig("storeCoffee", INextGenCoffemakerService.class));
-        Context out = context(exert(cmt));
-        assertNotNull(value(out, "coffee"));
+        Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18725")), result("recipes/s18728/mocha/added"));
+        Routine makeCoffee = task(sig("makeCoffee", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18725/mocha"), coffeemaker, result("coffeemakers/hall-03/orders/s18725/01/isMade"));
+        Routine storeCoffee = task(sig("storeCoffee", INextGenCoffemakerService.class), inVal("order", "coffeemakers/hall-03/orders/s18725/01"));
+        Block block = block("storeCoffee",addMocha,makeCoffee,storeCoffee);
+        Context out = context(exert(block));
+        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18725/01/isStored"));
     }
 
     @Test
     public void giveCoffee() throws Exception {
-        Routine cmt = task(sig("giveCoffee", INextGenCoffemakerService.class), context(ent("code", "18725")));
-        Context out = context(exert(cmt));
-        assertNotNull(value(out, "coffee"));
+        Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18725")), result("recipes/s18725/mocha/added"));
+        Routine giveCoffee = task(sig("giveCoffee", INextGenCoffemakerService.class), context(ent("code", "18725")));
+        Block block = block("giveCoffee",addMocha,giveCoffee);
+        Context out = context(exert(block));
+        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18725/01/isGiven"));
     }
 
     @Test
@@ -140,9 +149,12 @@ public class NewGenCoffeServiceTest {
 
     @Test
     public void checkInventory() throws Exception {
-        Routine cmt = task(sig("checkInventory", IInventoryService.class), context(ent("recipe", "recipes/s18728/mocha")));
-        Context out = context(exert(cmt));
-        assertNotNull(value(out, "inventory"));
+        Routine addMocha = task(sig("addRecipe", INextGenCoffemakerService.class), mocha.addPcr(ent("user-id", "s18725")), result("recipes/s18725/mocha/added"));
+        Routine createOrder = task(sig("createOrder", INextGenCoffemakerService.class), inVal("recipe", "recipes/s18725/mocha"), result("coffeemakers/hall-03/orders/s18725/01"));
+        Routine checkInventory = task(sig("checkInventory", IInventoryService.class), inVal("order", "coffeemakers/hall-03/orders/s18725/01"), result("coffeemakers/hall-03/orders/s18725/01/isEnough"));
+        Block block = block("giveCoffee",addMocha,createOrder,checkInventory);
+        Context out = context(exert(block));
+        assertNotNull(value(out, "coffeemakers/hall-03/orders/s18725/01/isEnough"));
     }
 
 	@Test
