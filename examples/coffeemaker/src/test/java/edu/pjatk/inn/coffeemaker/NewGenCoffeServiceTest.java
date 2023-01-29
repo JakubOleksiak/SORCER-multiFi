@@ -105,32 +105,44 @@ public class NewGenCoffeServiceTest {
 
     @Test
     public void createOrder() throws Exception {
-		//TODO @Ewelina
+        Routine cmt = task(sig("createOrder", INextGenCoffemakerService.class), context(ent("user-id", "s18725")));
+        Context out = context(exert(cmt));
+        assertNotNull(value(out, "order"));
     }
 
     @Test
     public void makeCoffee() throws Exception {
-		//TODO @Ewelina
+        Routine cmt = task(sig("makeCoffee", CoffeeService.class), context(ent("recipe", "recipes/s18728/mocha")));
+        Context out = context(exert(cmt));
+        assertNotNull(value(out, "coffee"));
     }
 
     @Test
     public void storeCoffee() throws Exception {
-		//TODO @Ewelina
+        Routine cmt = task(sig("storeCoffee", INextGenCoffemakerService.class));
+        Context out = context(exert(cmt));
+        assertNotNull(value(out, "coffee"));
     }
 
     @Test
     public void giveCoffee() throws Exception {
-		//TODO @Ewelina
+        Routine cmt = task(sig("giveCoffee", INextGenCoffemakerService.class), context(ent("code", "18725")));
+        Context out = context(exert(cmt));
+        assertNotNull(value(out, "coffee"));
     }
 
     @Test
     public void confirmPayment() throws Exception {
-		//TODO @Ewelina
+        Routine cmt = task(sig("confirmPayment", IPaymentService.class), context(ent("user-id", "s18725")));
+        Context out = context(exert(cmt));
+        assertNotNull(value(out, "payment"));
     }
 
     @Test
     public void checkInventory() throws Exception {
-		//TODO @Ewelina
+        Routine cmt = task(sig("checkInventory", IInventoryService.class), context(ent("recipe", "recipes/s18728/mocha")));
+        Context out = context(exert(cmt));
+        assertNotNull(value(out, "inventory"));
     }
 
 	@Test
